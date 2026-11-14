@@ -3,7 +3,7 @@ mod config;
 mod incidents;
 mod model;
 mod monitor;
-mod mtp_server;
+mod public;
 
 use std::{
     path::{Path, PathBuf},
@@ -15,13 +15,13 @@ use chrono::Utc;
 use config::Config;
 use incidents::IncidentStore;
 use model::{Category, Service, ServiceStatus, Snapshot};
-use tokio::sync::{RwLock, watch};
+use tokio::sync::{Mutex, RwLock, watch};
 
 pub struct AppState {
     categories: Arc<RwLock<Vec<Category>>>,
     incidents: IncidentStore,
-    public_port: u16,
-    updates: watch::Sender<String>,
+    updates: watch::Sender<Arc<Snapshot>>,
+    publishing: Mutex<()>,
 }
 
 impl AppState {
@@ -33,14 +33,9 @@ impl AppState {
         }
     }
 
-    async fn snapshot_json(&self) -> String {
-        serde_json::to_string(&self.snapshot().await).expect("snapshot is serializable")
-    }
-
     async fn publish(&self) {
-        let payload = self.snapshot_json().await;
-        tracing::info!(bytes = payload.len(), "publishing status snapshot");
-        self.updates.send_replace(payload);
+        let _publishing = self.publishing.lock().await;
+        self.updates.send_replace(Arc::new(self.snapshot().await));
     }
 }
 
@@ -62,17 +57,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let categories = Arc::new(RwLock::new(load_categories(&config)?));
     let incidents = IncidentStore::load(state_dir.join("incidents.json")).await?;
-    let initial = serde_json::to_string(&Snapshot {
+    let initial = Arc::new(Snapshot {
         categories: categories.read().await.clone(),
         incidents: incidents.list().await,
         generated_at: Utc::now(),
-    })?;
+    });
     let (updates, _) = watch::channel(initial);
     let state = Arc::new(AppState {
         categories: Arc::clone(&categories),
         incidents,
-        public_port: config.public_port,
         updates,
+        publishing: Mutex::new(()),
     });
 
     let monitor_config = Arc::clone(&config);
@@ -89,14 +84,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         PathBuf::from(&config.frontend_dir),
         Arc::clone(&state),
     );
-    let mtp = mtp_server::serve(
-        config.public_address,
-        config.public_port,
-        tokio::fs::read(&config.certificate).await?,
-        tokio::fs::read(&config.private_key).await?,
+    let public = public::serve(
+        (config.public_address, config.public_port).into(),
+        PathBuf::from(&config.frontend_dir),
         state,
     );
-    tokio::try_join!(admin, async { mtp.await.map_err(std::io::Error::other) })?;
+    tokio::try_join!(admin, public)?;
     Ok(())
 }
 

@@ -4,11 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = "0.8"
+axum = { version = "0.8", features = ["ws"] }
 base64 = "0.23"
 chrono = { version = "0.4", features = ["serde"] }
 http = "1"
-mtp = { git = "https://git.methanium.net/methanium/mtp.git", tag = "0.4.0-dev-9f7f94e", features = ["crypto", "web-server"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

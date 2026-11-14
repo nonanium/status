@@ -1,5 +1,5 @@
 {
-  description = "Methanium Status";
+  description = "Nonanium Status";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -34,28 +34,6 @@
         let
           pkgs = pkgsFor system;
           root = toString ./.;
-          rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-            targets = [ "wasm32-unknown-unknown" ];
-          };
-          wasmBindgenCli = pkgs.rustPlatform.buildRustPackage rec {
-            pname = "wasm-bindgen-cli";
-            version = "0.2.127";
-            src = pkgs.fetchCrate {
-              inherit pname version;
-              hash = "sha256-di+qBAdd7pENLiIB9CoZoab+W5xeDoByMREcCGTSzWo=";
-            };
-            cargoHash = "sha256-FTv2GZIAQs0ePdIZXIXil7JbZ6kIT05VG6vqC1qNFxQ=";
-            doCheck = false;
-          };
-          mtpSource = pkgs.fetchzip {
-            url = "https://git.methanium.net/methanium/mtp/releases/download/0.4.0-dev-9f7f94e/mtp-0.4.0.tgz";
-            hash = "sha256-GrzbRlfG4zBNEgvBqqHV7N6T3Nj6dYjDyxWEEBjqu9k=";
-          };
-          mtpCargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-            src = mtpSource;
-            sourceRoot = "source/.rust";
-            hash = "sha256-wrBgg1fXxsQoFCE1wnPdoPi9MxvyRjvpIj3eSxFlmqI=";
-          };
           source = pkgs.lib.cleanSourceWith {
             src = ./.;
             filter =
@@ -70,14 +48,10 @@
               && relative != "result";
           };
           frontendNativeBuildInputs = [
-            pkgs.binaryen
             pkgs.cacert
             pkgs.git
             pkgs.nodejs
             pkgs.pnpm
-            pkgs.wasm-pack
-            rustToolchain
-            wasmBindgenCli
           ];
           frontendDeps = pkgs.fetchPnpmDeps {
             pname = "methanium-status-frontend-deps";
@@ -85,7 +59,7 @@
             src = source;
             pnpm = pkgs.pnpm;
             fetcherVersion = 4;
-            hash = "sha256-TuGD8X1zBli34vPfoSXtOuOfTpd1j+WTri6VU0FnAuE=";
+            hash = "sha256-Up0Kiv+W0BwsLWLX34pbzRFxQtQ1GZAlQYYenmVHauY=";
           };
           frontend = pkgs.stdenvNoCC.mkDerivation {
             pname = "methanium-status-frontend";
@@ -97,16 +71,6 @@
             buildPhase = ''
               runHook preBuild
               export HOME="$TMPDIR/home"
-              export CARGO_HOME="$TMPDIR/cargo"
-              export CARGO_NET_OFFLINE=true
-              mkdir -p "$CARGO_HOME"
-              cat > "$CARGO_HOME/config.toml" <<EOF
-              [source.crates-io]
-              replace-with = "vendored-sources"
-
-              [source.vendored-sources]
-              directory = "${mtpCargoDeps}/source-registry-0"
-              EOF
               pnpm build
               runHook postBuild
             '';
@@ -123,14 +87,9 @@
             src = source;
             cargoRoot = "apps/backend";
             buildAndTestSubdir = "apps/backend";
-            MTP_TYPE_MAPS = "${source}/apps/frontend/type-maps.yaml";
             cargoLock = {
               lockFile = ./apps/backend/Cargo.lock;
-              outputHashes = {
-                "mtp-0.4.0" = "sha256-XPTSHkbcUE4PguJXBlXzL74JADG4Kjp5eB11llMcxxc=";
-              };
             };
-            nativeBuildInputs = [ pkgs.cmake ];
           };
         in
         {
@@ -149,18 +108,14 @@
               "rust-src"
               "rustfmt"
             ];
-            targets = [ "wasm32-unknown-unknown" ];
           };
         in
         {
           default = pkgs.mkShell {
             packages = [
-              pkgs.cmake
               pkgs.curl
               pkgs.nodejs
-              pkgs.openssl
               pkgs.pnpm
-              pkgs.wasm-pack
               rustToolchain
             ];
           };
@@ -230,8 +185,6 @@
             admin_port = cfg.adminPort;
             check_interval_seconds = cfg.checkInterval;
             timeout_seconds = cfg.timeout;
-            certificate = "/var/lib/acme/${acmeHost}/fullchain.pem";
-            private_key = "/var/lib/acme/${acmeHost}/key.pem";
             frontend_dir = toString cfg.frontendPackage;
             state_dir = "/var/lib/${cfg.stateDirectory}";
             curl = "${pkgs.curl}/bin/curl";
@@ -247,14 +200,14 @@
         in
         {
           options.services.methanium-status = {
-            enable = lib.mkEnableOption "Methanium Status monitoring and status page";
+            enable = lib.mkEnableOption "Nonanium Status monitoring and status page";
             package = lib.mkPackageOption self.packages.${pkgs.stdenv.hostPlatform.system} "backend" { };
             frontendPackage =
               lib.mkPackageOption self.packages.${pkgs.stdenv.hostPlatform.system} "frontend"
                 { };
             hostName = lib.mkOption {
               type = lib.types.str;
-              default = "status.methanium.net";
+              default = "status.nonanium.net";
               description = "Public status page hostname.";
             };
             acmeHost = lib.mkOption {
@@ -264,13 +217,13 @@
             };
             publicAddress = lib.mkOption {
               type = lib.types.str;
-              default = "0.0.0.0";
-              description = "Address on which the UDP MTP server listens.";
+              default = "127.0.0.1";
+              description = "Address on which the public HTTP and WebSocket backend listens.";
             };
             publicPort = lib.mkOption {
               type = lib.types.port;
-              default = 443;
-              description = "Public UDP port for the MTP server.";
+              default = 8080;
+              description = "HTTP backend port used by the nginx reverse proxy.";
             };
             adminAddress = lib.mkOption {
               type = lib.types.str;
@@ -300,7 +253,7 @@
             openFirewall = lib.mkOption {
               type = lib.types.bool;
               default = false;
-              description = "Open the public UDP port in the firewall.";
+              description = "Open HTTP and HTTPS ports for the public nginx virtual host.";
             };
             openAdminFirewall = lib.mkOption {
               type = lib.types.bool;
@@ -313,33 +266,28 @@
               default = [
                 {
                   id = "methanium";
-                  name = "Methanium";
+                  name = "Nonanium";
                   logo = ./apps/frontend/public/methanium.svg;
                   services = [
                     {
                       id = "methanium-homepage";
                       name = "Homepage";
-                      url = "https://methanium.net";
+                      url = "https://nonanium.net";
                     }
                     {
                       id = "methanium-ui";
-                      name = "Methanium UI";
-                      url = "https://ui.methanium.net";
-                    }
-                    {
-                      id = "vector-verdict";
-                      name = "Vector Verdict";
-                      url = "https://vv.methanium.net";
+                      name = "Nonanium UI";
+                      url = "https://ui.nonanium.net";
                     }
                     {
                       id = "methanium-git";
                       name = "Git";
-                      url = "https://git.methanium.net";
+                      url = "https://github.com/nonanium";
                     }
                     {
                       id = "methanium-legal";
                       name = "Legal Page";
-                      url = "https://legal.methanium.net";
+                      url = "https://legal.nonanium.net";
                     }
                   ];
                 }
@@ -404,20 +352,39 @@
             };
 
             security.acme.certs.${acmeHost} = {
-              group = "methanium-status";
-              reloadServices = [ "methanium-status.service" ];
+              group = "nginx";
+            };
+
+            services.nginx = {
+              enable = true;
+              virtualHosts.${cfg.hostName} = {
+                forceSSL = true;
+                useACMEHost = acmeHost;
+                root = cfg.frontendPackage;
+                locations = {
+                  "/".tryFiles = "$uri $uri/ /index.html";
+                  "/api/".return = "404";
+                  "= /api/status" = {
+                    proxyPass = "http://${
+                      if lib.hasInfix ":" cfg.publicAddress then "[${cfg.publicAddress}]" else cfg.publicAddress
+                    }:${toString cfg.publicPort}";
+                    proxyWebsockets = true;
+                    extraConfig = ''
+                      proxy_read_timeout 90s;
+                    '';
+                  };
+                };
+              };
             };
 
             systemd.services.methanium-status = {
-              description = "Methanium Status monitor";
+              description = "Nonanium Status monitor";
               wantedBy = [ "multi-user.target" ];
               wants = [
                 "network-online.target"
-                "acme-${acmeHost}.service"
               ];
               after = [
                 "network-online.target"
-                "acme-${acmeHost}.service"
               ];
               restartTriggers = [ configFile ];
               serviceConfig = {
@@ -427,8 +394,6 @@
                 ExecStart = "${cfg.package}/bin/methanium-status ${configFile}";
                 Restart = "on-failure";
                 RestartSec = 5;
-                AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
-                CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
                 LockPersonality = true;
                 NoNewPrivileges = true;
                 PrivateDevices = true;
@@ -452,8 +417,12 @@
               };
             };
 
-            networking.firewall.allowedTCPPorts = lib.optionals cfg.openAdminFirewall [ cfg.adminPort ];
-            networking.firewall.allowedUDPPorts = lib.optionals cfg.openFirewall [ cfg.publicPort ];
+            networking.firewall.allowedTCPPorts =
+              lib.optionals cfg.openFirewall [
+                80
+                443
+              ]
+              ++ lib.optionals cfg.openAdminFirewall [ cfg.adminPort ];
           };
         };
     };

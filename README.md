@@ -1,6 +1,8 @@
-# Methanium Status
+# Nonanium Status
 
-Live availability and incident reporting for Methanium and Tensamin services. The Rust backend checks configured URLs every five minutes, verifies HTTP/3 where requested, persists incident history, and pushes snapshots to the React status page over MTP/WebTransport.
+Live availability and incident reporting for Nonanium and Tensamin services. The Rust backend checks configured URLs every five minutes, verifies HTTP/3 where requested, persists incident history, and pushes updates to the React status page over WebSockets.
+
+Each browser tab shares one connection. It receives a full snapshot once, then only changed service fields and incident additions, updates, or deletions. Logos and unchanged metadata are not repeated. A reconnect receives a fresh snapshot, and slow clients skip intermediate states without losing the latest changes. Empty WebSocket ping/pong frames keep idle connections alive.
 
 ## Development
 
@@ -11,16 +13,16 @@ pnpm check
 pnpm dev
 ```
 
-`pnpm dev` generates a short-lived localhost certificate, uses it for the HTTPS frontend and WebTransport backend, and writes the matching WebTransport certificate hash. The public page is available on Vite's displayed HTTPS URL and the incident editor is available at `http://127.0.0.1:8091/edit` after the frontend has been built once.
+`pnpm dev` starts Vite and the backend. Vite proxies `/api/status` to the public backend on `127.0.0.1:8080`. The incident editor is available at `http://127.0.0.1:8091/edit` after the frontend has been built once.
 
-For a manual backend configuration, copy `config.example.toml`, update the certificate paths, build the frontend, and run:
+For a manual backend configuration, copy `config.example.toml`, build the frontend, and run:
 
 ```sh
 pnpm build
 cargo run --manifest-path apps/backend/Cargo.toml -- ./config.toml
 ```
 
-Set `VITE_MTP_URL` when the development MTP endpoint is not available at the frontend's own `/mtp` origin.
+The browser uses `/api/status` on the page's own origin. Outside development, terminate TLS at the reverse proxy and forward WebSocket upgrades to the public backend. Do not proxy the separate admin listener to the public internet.
 
 ## Configuration
 
@@ -53,12 +55,12 @@ ssh -L 8081:127.0.0.1:8081 status-host
 
 ## NixOS
 
-The included module serves the SPA with MTP HTTP/3/WebTransport on UDP 443 using an ACME certificate.
+The included module serves the SPA over HTTPS with nginx and an ACME certificate. It forwards only `/api/status` to the public HTTP/WebSocket listener, which defaults to loopback port 8080. The admin API remains on its separate loopback listener. It no longer needs MTP, WebAssembly builds, or an inbound UDP port.
 
 ```nix
 {
   inputs.methanium-status.url =
-    "git+https://git.methanium.net/methanium/status";
+    "github:nonanium/status";
 
   outputs = { nixpkgs, methanium-status, ... }: {
     nixosConfigurations.host = nixpkgs.lib.nixosSystem {
@@ -95,6 +97,6 @@ The included module serves the SPA with MTP HTTP/3/WebTransport on UDP 443 using
 
 Use `acmeHost` to share an already configured NixOS ACME certificate. The service options also expose the check interval, timeout, public listener, admin listener, state directory, packages, firewall behavior, categories, logo paths, and services.
 
-Contact: [contact@methanium.net](mailto:contact@methanium.net)
+Contact: [contact@nonanium.net](mailto:contact@nonanium.net)
 
-Security: [security@methanium.net](mailto:security@methanium.net)
+Security: [security@nonanium.net](mailto:security@nonanium.net)

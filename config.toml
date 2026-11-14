@@ -1,44 +1,37 @@
-public_address = "0.0.0.0"
-public_port = 4433
+public_address = "127.0.0.1"
+public_port = 8080
 admin_address = "127.0.0.1"
 admin_port = 8091
 check_interval_seconds = 300
 timeout_seconds = 15
-certificate = ".dev/cert.pem"
-private_key = ".dev/key.pem"
 frontend_dir = "apps/frontend/dist"
 state_dir = ".dev/state"
 curl = "curl"
 
 [[categories]]
 id = "methanium"
-name = "Methanium"
+name = "Nonanium"
 logo = "apps/frontend/public/methanium.svg"
 
 [[categories.services]]
 id = "methanium-homepage"
 name = "Homepage"
-url = "https://methanium.net"
+url = "https://nonanium.net"
 
 [[categories.services]]
 id = "methanium-ui"
-name = "Methanium UI"
-url = "https://ui.methanium.net"
-
-[[categories.services]]
-id = "vector-verdict"
-name = "Vector Verdict"
-url = "https://vv.methanium.net"
+name = "Nonanium UI"
+url = "https://ui.nonanium.net"
 
 [[categories.services]]
 id = "methanium-git"
 name = "Git"
-url = "https://git.methanium.net"
+url = "https://github.com/nonanium"
 
 [[categories.services]]
 id = "methanium-legal"
 name = "Legal Page"
-url = "https://legal.methanium.net"
+url = "https://legal.nonanium.net"
 
 [[categories]]
 id = "tensamin"

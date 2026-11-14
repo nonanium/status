@@ -12,8 +12,6 @@ pub struct Config {
     pub admin_port: u16,
     pub check_interval_seconds: u64,
     pub timeout_seconds: u64,
-    pub certificate: String,
-    pub private_key: String,
     pub frontend_dir: String,
     pub state_dir: String,
     pub curl: String,
@@ -23,14 +21,12 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            public_address: "0.0.0.0".parse().unwrap(),
-            public_port: 443,
+            public_address: "127.0.0.1".parse().unwrap(),
+            public_port: 8080,
             admin_address: "127.0.0.1".parse().unwrap(),
             admin_port: 8081,
             check_interval_seconds: 300,
             timeout_seconds: 15,
-            certificate: String::new(),
-            private_key: String::new(),
             frontend_dir: String::new(),
             state_dir: "/var/lib/methanium-status".into(),
             curl: "curl".into(),
@@ -91,11 +87,6 @@ fn validate(config: &Config) -> Result<(), ConfigError> {
     if config.check_interval_seconds == 0 || config.timeout_seconds == 0 {
         return Err(ConfigError::Invalid(
             "check interval and timeout must be greater than zero".into(),
-        ));
-    }
-    if config.certificate.is_empty() || config.private_key.is_empty() {
-        return Err(ConfigError::Invalid(
-            "certificate and private_key are required".into(),
         ));
     }
     if config.frontend_dir.is_empty() {

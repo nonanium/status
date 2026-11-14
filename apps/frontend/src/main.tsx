@@ -1,13 +1,12 @@
 import "./styles.css";
 
-import { ThemeProvider } from "@methanium/ui";
-import { Provider as MTPProvider } from "@methanium/status-mtp";
+import { ThemeProvider } from "@nonanium/ui";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { routeTree } from "./routeTree.gen";
-import { mtpOptions } from "./mtp-options.ts";
+import { StatusProvider } from "./use-status";
 
 const router = createRouter({ routeTree });
 
@@ -20,9 +19,9 @@ declare module "@tanstack/react-router" {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark">
-      <MTPProvider options={mtpOptions} authenticate={false}>
+      <StatusProvider>
         <RouterProvider router={router} />
-      </MTPProvider>
+      </StatusProvider>
     </ThemeProvider>
   </StrictMode>,
 );

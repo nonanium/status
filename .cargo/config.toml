@@ -1,2 +1,0 @@
-[env]
-MTP_TYPE_MAPS = { value = "apps/frontend/type-maps.yaml", relative = true }

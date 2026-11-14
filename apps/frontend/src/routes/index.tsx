@@ -29,12 +29,12 @@ import {
   TabsList,
   TabsTrigger,
   cn,
-} from "@methanium/ui";
+} from "@nonanium/ui";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-  const { snapshot } = useStatus();
+  const { snapshot, connected } = useStatus();
   const [showPastIncidents, setShowPastIncidents] = useState(false);
   const services =
     snapshot?.categories.flatMap((category) => category.services) ?? [];
@@ -51,13 +51,15 @@ function Home() {
   const pending = services.some((service) => service.status === "unknown");
   const ready = snapshot !== null && !pending;
   const healthy =
-    ready && failures.length === 0 && activeIncidents.length === 0;
+    connected && ready && failures.length === 0 && activeIncidents.length === 0;
 
   return (
     <main className="flex flex-col gap-10 py-10">
       <div className="w-full flex gap-3 justify-center items-center">
         <div>
-          {healthy ? (
+          {!connected && snapshot ? (
+            <WifiOff className="size-7" />
+          ) : healthy ? (
             <Check className="size-7" />
           ) : ready ? (
             <AlertTriangle className="size-7" />
@@ -67,18 +69,22 @@ function Home() {
         </div>
         <div className="flex flex-col justify-start">
           <p className="text-lg">
-            {healthy
-              ? "We're up and running"
-              : ready
-                ? `${failures.length + activeIncidents.length} active disruption${failures.length + activeIncidents.length === 1 ? "" : "s"}`
-                : "Loading data..."}
+            {!connected && snapshot
+              ? "Live updates disconnected"
+              : healthy
+                ? "We're up and running"
+                : ready
+                  ? `${failures.length + activeIncidents.length} active disruption${failures.length + activeIncidents.length === 1 ? "" : "s"}`
+                  : "Loading data..."}
           </p>
           <p className="text-sm text-muted-foreground">
-            {!healthy && ready
-              ? "More details below."
-              : snapshot
-                ? ""
-                : "Connecting..."}
+            {!connected && snapshot
+              ? "Displayed data may be outdated. Reconnecting..."
+              : !healthy && ready
+                ? "More details below."
+                : snapshot
+                  ? ""
+                  : "Connecting..."}
           </p>
         </div>
       </div>

@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       <Header />
       <Outlet />
       <a
-        href="https://legal.methanium.net/methanium/privacy-policy"
+        href="https://legal.nonanium.net/nonanium/privacy-policy"
         target="_blank"
         className="hover:underline fixed bottom-0 left-0 p-3"
       >

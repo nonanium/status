@@ -1,6 +1,6 @@
-import { ExternalLink, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
-import { Button, useTheme } from "@methanium/ui";
+import { Button, useTheme } from "@nonanium/ui";
 import { useStatus } from "../../use-status";
 import { formatTime } from "../../utils";
 
@@ -18,7 +18,7 @@ export function Header() {
           size="sm"
           className="mr-1 shrink-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           style={{ padding: "3px 13px" }}
-          render={<a href="/" aria-label="Methanium home" />}
+          render={<a href="/" aria-label="Nonanium home" />}
         >
           <img src="/methanium.svg" alt="Logo" className="w-[20.59px]!" />
         </Button>
@@ -31,7 +31,7 @@ export function Header() {
             variant="ghost"
             size="sm"
             className="hidden md:flex h-9 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            render={<a target="_blank" href="mailto:contact@methanium.net" />}
+            render={<a target="_blank" href="mailto:contact@nonanium.net" />}
           >
             Contact us
           </Button>
@@ -40,16 +40,17 @@ export function Header() {
             variant="ghost"
             size="sm"
             className="hidden md:flex h-9 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            render={<a target="_blank" href="mailto:security@methanium.net" />}
+            render={<a target="_blank" href="mailto:security@nonanium.net" />}
           >
             Report security issue
           </Button>
         </nav>
         <div className="flex h-full items-center gap-2">
           <p className="text-sm text-muted-foreground max-w-70 overflow-hidden truncate">
-            {snapshot?.generatedAt
-              ? `Updated ${formatTime(snapshot.generatedAt)}`
-              : (error?.message ?? "Waiting for data")}
+            {error?.message ??
+              (snapshot?.generatedAt
+                ? `Updated ${formatTime(snapshot.generatedAt)}`
+                : "Waiting for data")}
           </p>
           <Button
             type="button"

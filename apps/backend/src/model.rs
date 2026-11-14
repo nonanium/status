@@ -44,7 +44,7 @@ pub enum ServiceStatus {
     Http3Error,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Incident {
     pub id: Uuid,
@@ -55,7 +55,7 @@ pub struct Incident {
     pub resolved_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Severity {
     Minor,

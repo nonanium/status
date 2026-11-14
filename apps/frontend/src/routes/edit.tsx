@@ -15,7 +15,7 @@ import {
   SelectValue,
   Textarea,
   cn,
-} from "@methanium/ui";
+} from "@nonanium/ui";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Check, Loader2, Plus, ShieldAlert, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";

@@ -37,10 +37,43 @@ export type Snapshot = {
   generatedAt: string;
 };
 
-export function parseSnapshot(message: { data: unknown }): Snapshot {
-  const data = message.data as Record<string, unknown>;
-  if (typeof data?.Payload !== "string") {
-    throw new Error("Status response did not contain a payload");
+export type StatusMessage =
+  | { type: "snapshot"; data: Snapshot }
+  | {
+      type: "update";
+      generatedAt: string;
+      services?: (Partial<Service> & { id: string })[];
+      incidents?: Incident[];
+      removedIncidents?: string[];
+    };
+
+export function applyUpdate(
+  current: Snapshot | null,
+  message: StatusMessage,
+): Snapshot {
+  if (message.type === "snapshot") return message.data;
+  if (message.type !== "update" || !current) {
+    throw new Error("Expected an initial status snapshot");
   }
-  return JSON.parse(data.Payload) as Snapshot;
+  const services = new Map(
+    message.services?.map((service) => [service.id, service]),
+  );
+  const incidents = new Map(
+    current.incidents.map((incident) => [incident.id, incident]),
+  );
+  for (const id of message.removedIncidents ?? []) incidents.delete(id);
+  for (const incident of message.incidents ?? [])
+    incidents.set(incident.id, incident);
+  return {
+    categories: current.categories.map((category) => ({
+      ...category,
+      services: category.services.map((service) =>
+        services.has(service.id)
+          ? { ...service, ...services.get(service.id) }
+          : service,
+      ),
+    })),
+    incidents: [...incidents.values()],
+    generatedAt: message.generatedAt,
+  };
 }

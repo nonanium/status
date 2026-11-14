@@ -17,7 +17,7 @@ pub async fn run(
     let client = reqwest::Client::builder()
         .redirect(Policy::limited(10))
         .timeout(Duration::from_secs(config.timeout_seconds))
-        .user_agent("Methanium-Status/0.1")
+        .user_agent("Nonanium-Status/0.1")
         .build()
         .expect("HTTP client configuration is valid");
     let mut interval = tokio::time::interval(Duration::from_secs(config.check_interval_seconds));

@@ -8,11 +8,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@methanium/status-mtp": "workspace:*",
-    "@methanium/ui": "https://git.methanium.net/methanium/ui/releases/download/0.0.47/methanium-ui.tgz",
+    "@nonanium/ui": "https://github.com/nonanium/ui/releases/download/0.2.5/nonanium-ui.tgz",
     "@tanstack/react-router": "^1.170.41",
     "lucide-react": "^1.54.0",
-    "mtp": "https://git.methanium.net/methanium/mtp/releases/download/0.4.0-dev-9f7f94e/mtp-0.4.0.tgz",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

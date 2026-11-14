@@ -1,12 +1,10 @@
 packages:
   - apps/*
-  - packages/*
 
 nodeLinker: hoisted
 
 overrides:
-  "@methanium/ui": "https://git.methanium.net/methanium/ui/releases/download/0.0.47/methanium-ui.tgz"
-  mtp: "https://git.methanium.net/methanium/mtp/releases/download/0.4.0-dev-9f7f94e/mtp-0.4.0.tgz"
+  "@nonanium/ui": "https://github.com/nonanium/ui/releases/download/0.2.5/nonanium-ui.tgz"
 
 allowBuilds:
   esbuild: true
